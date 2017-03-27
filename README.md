@@ -11,20 +11,20 @@ Compile using Maven by running:
     mvn package
 
 ## Import tool
-This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  [HAFAS API](https://github.com/derhuerst/vbb-hafas) to get the current position and delay of vehicles and writes them into a SQL table. It is in very early development stage, but anyway it has already collected over four millions of records.
+This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  [HAFAS API](https://github.com/derhuerst/vbb-hafas) to get the current position and delay of vehicles and writes them into a **MySQL** table. It is in very early development stage, but anyway it has already collected over four millions of records.
 
-Use it like this:
+    usage: Import [-h <arg>] [-u <arg>] [-p <arg>] -d <arg> [-help | -c | -s]
+    -h,--host <arg>       Hostname or IP of the database server
+    -u,--user <arg>       User name for the database server
+    -p,--password <arg>   Password for the database server
+    -d,--database <arg>   The database name
+    -help,--help          Print command line syntax
+    -c,--create-table     Executes a CREATE TABLE statement instead of inserting data
+    -s,--show-table       Prints out a CREATE TABLE statement instead of inserting data
 
-usage: Import [-h <arg>] [-u <arg>] [-p <arg>] -d <arg> [-help | -c | -s]
- -h,--host <arg>       Hostname or IP of the database server
- -u,--user <arg>       User name for the database server
- -p,--password <arg>   Password for the database server
- -d,--database <arg>   The database name
- -help,--help          Print command line syntax
- -c,--create-table     Executes a CREATE TABLE statement instead of inserting data
- -s,--show-table       Prints out a CREATE TABLE statement instead of inserting data
+You should use `-c` or `-s` on the first run to initialize the table schema.
 
-For each invocation, it makes a single request to the API and another one to the database. For continous data collection, you might set up a cronjob which runs every minute.
+For each invocation without `-c` or `-s`, it performs a single request to the API and another one to the database. For continous data collection, you might set up a cronjob which runs every minute.
 
 ## Future tools
 Over the course of 2017, the following tools/features are planned:
