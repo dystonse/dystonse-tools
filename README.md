@@ -1,5 +1,5 @@
 # dystonse-tools
-Java-powered tools supporting the dystonse-algorithm. The aim is bridging the gap between Berlins real time data (in the proprietary HAFAS format) and other available date, which is published as GTFS realtime feed, so that software can be built that works on either kind of data stream.
+Java-powered tools supporting the [dystonse](https://github.com/lenaschimmel/dystonse)-algorithm. The aim is bridging the gap between Berlins real time data (in the proprietary HAFAS format) and other available date, which is published as GTFS realtime feed, so that software can be built that works on either kind of data stream.
 
 Currently there is only a very simple data logger to get delay information from VBB and write it to a database.
 
@@ -11,7 +11,7 @@ Compile using Maven by running:
     mvn package
 
 ## Import tool
-This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  [HAFAS API](https://github.com/derhuerst/vbb-hafas) to get the current position and delay of vehicles and writes them into a **MySQL** table. It is in very early development stage, but anyway it has already collected over four millions of records.
+This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  [HAFAS API](https://github.com/derhuerst/vbb-hafas) to get the current position and delay of vehicles and writes them into a **MySQL** table. It is in very early development stage, but anyway it has already collected over four million records.
 
     usage: Import [-h <arg>] [-u <arg>] [-p <arg>] -d <arg> [-help | -c | -s]
     -h,--host <arg>       Hostname or IP of the database server
