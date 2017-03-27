@@ -2,11 +2,9 @@ package net.dystonse.tools;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import java.sql.Connection;
-import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
 import java.util.Arrays;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 
@@ -21,27 +19,44 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-/**
- * Hello world!
- *
- */
+import org.apache.commons.cli.*;
+
 public class App 
 {
-    public static void main( String[] args ) throws SQLException, IOException
-    {
-        String user, host, password;
+    static Option optHost, optUser, optPassword, optHelp;
+
+    public static CommandLine parseCommandLine(String[] args) {
+        optHost     = Option.builder("h")   .longOpt("host").    required().hasArg().desc("Hostname or IP of the database server").build();
+        optUser     = Option.builder("u")   .longOpt("user").    required().hasArg().desc("User name for the database server").build();
+        optPassword = Option.builder("p")   .longOpt("password").required().hasArg().desc("Password for the database server").build();
+        optHelp     = Option.builder("help").longOpt("help").                        desc("Print command line syntax").build();
+
+        Options options = new Options();
+        options.addOption(optHost);
+        options.addOption(optUser);
+        options.addOption(optPassword);
+        options.addOption(optHelp);
+
+        CommandLineParser parser = new DefaultParser();
         try {
-            List<String> argList = Arrays.asList(args);
-            int hostPos = argList.indexOf("--host");
-            host = argList.get(hostPos + 1);
-            int userPos = argList.indexOf("--user");
-            user = argList.get(userPos + 1);
-            int passwordPos = argList.indexOf("--password");
-            password = argList.get(passwordPos + 1);
-        } catch (Exception e) {
-            System.err.println("Usage: <App> --host host --user user --password password");
-            return;
+           CommandLine line = parser.parse(options, args);
+           if(line.hasOption("help")) {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("App", options, true);
+           }
+           return line;
+        } catch(ParseException exp) {
+            System.err.println("Parsing command line failed. Reason: " + exp.getMessage());
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("App", options, true);
+            System.exit(-1);
+            return null;
         }
+    }
+
+    public static void main(String[] args) throws SQLException, IOException
+    {
+        CommandLine line = parseCommandLine(args);
 
         System.out.println( "Hole Daten von der VBB..." );
 
@@ -68,9 +83,9 @@ public class App
         System.out.println("Verbinde mit der Datenbank...");
 
         MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setUser(user);
-        dataSource.setPassword(password);
-        dataSource.setServerName(host);
+        dataSource.setUser(line.getOptionValue("user"));
+        dataSource.setPassword(line.getOptionValue("password"));
+        dataSource.setServerName(line.getOptionValue("host"));
         Connection conn = dataSource.getConnection();
 
         final PreparedStatement statement = conn.prepareStatement("INSERT INTO `dystonse`.`realtime-input` (`id`, `datasource`, `compound_id`, `productclass`, `d`, `name`, `destination`, `location`, `timestamp`, `delay`) VALUES (NULL, 'VBB', ?, ?, ?, ?, ?, GeomFromText(?), CURRENT_TIMESTAMP, ?);");
