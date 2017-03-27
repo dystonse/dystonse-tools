@@ -3,8 +3,6 @@ package net.dystonse.tools;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import java.sql.Connection;
 import java.sql.Types;
-import java.util.List;
-import java.util.Arrays;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 
@@ -20,8 +18,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.cli.*;
-
-public class App 
+public class Import 
 {
     static Option optHost, optUser, optPassword, optHelp;
 
@@ -42,13 +39,13 @@ public class App
            CommandLine line = parser.parse(options, args);
            if(line.hasOption("help")) {
                 HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("App", options, true);
+                formatter.printHelp("Import", options, true);
            }
            return line;
         } catch(ParseException exp) {
             System.err.println("Parsing command line failed. Reason: " + exp.getMessage());
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("App", options, true);
+            formatter.printHelp("Import", options, true);
             System.exit(-1);
             return null;
         }
