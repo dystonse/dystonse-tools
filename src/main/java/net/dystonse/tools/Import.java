@@ -3,6 +3,7 @@ package net.dystonse.tools;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import java.sql.Connection;
 import java.sql.Types;
+import java.util.Arrays;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -21,7 +22,8 @@ import com.google.gson.JsonObject;
 import org.apache.commons.cli.*;
 public class Import 
 {
-    static Option optHost, optUser, optPassword, optHelp, optDatabase, optCreate, optShow;
+    static Option optHost, optUser, optPassword, optHelp, optDatabase, optCreate, optShow, optRect;
+    static  int minX, minY, maxX, maxY;    
 
     static Connection conn;
     static CommandLine line;
@@ -37,13 +39,13 @@ public class Import
         System.out.println("Verbinde mit der Datenbank...");
 
         MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setUser(line.getOptionValue("user"));
-        dataSource.setPassword(line.getOptionValue("password"));
-        dataSource.setServerName(line.getOptionValue("host"));
+        dataSource.setUser(line.getOptionValue(optUser.getOpt()));
+        dataSource.setPassword(line.getOptionValue(optPassword.getOpt()));
+        dataSource.setServerName(line.getOptionValue(optHost.getOpt()));
         conn = dataSource.getConnection();
     }
 
-    static Options createOptions(boolean requireCredentials) {
+    static Options createOptions(boolean requireCredentials, boolean requireRect) {
         optHost     = Option.builder("h")   .longOpt("host").    required(requireCredentials).hasArg().desc("Hostname or IP of the database server").build();
         optUser     = Option.builder("u")   .longOpt("user").    required(requireCredentials).hasArg().desc("User name for the database server").build();
         optPassword = Option.builder("p")   .longOpt("password").required(requireCredentials).hasArg().desc("Password for the database server").build();
@@ -51,6 +53,7 @@ public class Import
         optCreate   = Option.builder("c")   .longOpt("create-table").                                  desc("Executes a CREATE TABLE statement instead of inserting data").build();
         optShow     = Option.builder("s")   .longOpt("show-table").                                    desc("Prints out a CREATE TABLE statement instead of inserting data").build();
         optHelp     = Option.builder("help").longOpt("help").                                          desc("Print command line syntax").build();
+        optRect     = Option.builder("r")   .longOpt("rect").    required(requireRect).       hasArg().desc("Use this bounding box to limit queries. Provide four values separated by semicolons").build();
         
         OptionGroup group = new OptionGroup();
         group.addOption(optCreate);
@@ -62,26 +65,27 @@ public class Import
         options.addOption(optUser);
         options.addOption(optPassword);
         options.addOption(optDatabase);
+        options.addOption(optRect);
         options.addOptionGroup(group);
 
         return options;
     }
 
     public static void parseCommandLine(String[] args) {
-        Options options = createOptions(false);
+        Options options = createOptions(false, false);
         CommandLineParser parser = new DefaultParser();
         try {
            line = parser.parse(options, args);
-           if(line.hasOption("help")) {
+           if(line.hasOption(optHelp.getOpt())) {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.setWidth(100);
                 formatter.setOptionComparator((Option a, Option b) -> 0);
                 formatter.printHelp("Import", options, true);
                 System.exit(0);
            }
-           if(!line.hasOption("show-table")) {
+           if(!line.hasOption(optShow.getOpt())) {
                 // restart options parsing with a fresh options & parser instance
-                options = createOptions(true);
+                options = createOptions(true, line.hasOption(optCreate.getOpt()));
                 parser = new DefaultParser();
                 line = parser.parse(options, args);
            }
@@ -95,13 +99,42 @@ public class Import
         }
     }
 
+    static void optAssert(boolean assertion, String message) {
+        if(!assertion) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    static void parseRect() throws IllegalArgumentException {
+        final int MIN_LON = 6;
+        final int MAX_LON = 15;
+        final int MIN_LAT = 47;
+        final int MAX_LAT = 56;
+
+        String   rectString  = line.getOptionValue(optRect.getOpt());
+        optAssert(rectString != null, "Parameter 'rect' must be present and have 4 numbers, separated by semicolons.");
+        String[] rectStrings = rectString.split(";");
+        optAssert(rectStrings.length == 4, "Parameter 'rect' must be present and have 4 numbers, separated by semicolons.");
+        float[] rectValues = new float[4];
+        for(int i = 0; i < 4; i++) {
+            rectValues[i] = Float.parseFloat(rectStrings[i]);
+            if(rectValues[i] < MIN_LON * 1_000_000)
+                rectValues[i] *= 1_000_000;
+        }
+        
+        Arrays.sort(rectValues);
+        for(int i = 0; i < 2; i++)
+            optAssert(rectValues[i] >  MIN_LON * 1_000_000 && rectValues[i] <  MAX_LON * 1_000_000, "Lon values must be between " + MIN_LON + " and " + MAX_LON + " degrees. You can use floats or integers, in any order.");
+        for(int i = 2; i < 4; i++)
+            optAssert(rectValues[i] >  MIN_LAT * 1_000_000 && rectValues[i] <  MAX_LAT * 1_000_000, "Lat values must be between " + MIN_LAT + " and " + MAX_LAT + " degrees. You can use floats or integers, in any order.");
+        minX = (int)rectValues[0];
+        maxX = (int)rectValues[1];
+        minY = (int)rectValues[2];
+        maxY = (int)rectValues[3];
+    }
     static void getVehicles() throws IOException {
         System.out.println( "Fetching data from VBB..." );
 
-        int minX = 13268700;
-        int minY = 52461900;
-        int maxX = 13481900;
-        int maxY = 52554200;
         String sURL = "http://fahrinfo.vbb.de/bin/query.exe/dny?look_minx="+minX+"&look_maxx="+maxX+"&look_miny="+minY+"&look_maxy="+maxY+"&tpl=trains2json2&look_productclass=127&look_json=yes&performLocating=1&look_nv=zugposmode|2|interval|0|intervalstep|1|";
 
         // Connect to the URL using java's native library
@@ -122,14 +155,15 @@ public class Import
     {
         parseCommandLine(args);
 
-        if(line.hasOption("show-table")) {
+        if(line.hasOption(optShow.getOpt())) {
             System.out.println(getCreateStatement());
             System.exit(0);
         }
 
+        parseRect();
         setupConnection();
         String database = line.getOptionValue("database");
-        if(line.hasOption("create-table")) {
+        if(line.hasOption(optCreate.getOpt())) {
             Statement smt = conn.createStatement();
             smt.execute(getCreateStatement());
             conn.close();
