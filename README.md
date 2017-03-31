@@ -26,6 +26,11 @@ You should use `-c` or `-s` on the first run to initialize the table schema.
 
 For each invocation without `-c` or `-s`, it performs a single request to the API and another one to the database. For continous data collection, you might set up a cronjob which runs every minute.
 
+## Database setup
+In the near future, _dystonse-tools_ will support the database schemas defined by the popular python tools [gtfsdb](https://github.com/OpenTransitTools/gtfsdb) and [gtfsrdb](https://github.com/mattwigway/gtfsrdb), as well as the data they create. By then, _dystonse-tools_ should be able to create the needed tables automatically.
+
+If you want to have those schemas now, you can either download, install and run them to create the needed tables (which maybe quite a hassle) or have a look at the SQL scripts from the directory [schema](https://github.com/lenaschimmel/dystonse-tools/tree/master/schema).
+
 ## Future tools
 Over the course of 2017, the following tools/features are planned:
 
