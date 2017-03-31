@@ -13,11 +13,13 @@ Compile using Maven by running:
 ## Import tool
 This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  [HAFAS API](https://github.com/derhuerst/vbb-hafas) to get the current position and delay of vehicles and writes them into a **MySQL** table. It is in very early development stage, but anyway it has already collected over four million records.
 
-    usage: Import [-h <arg>] [-u <arg>] [-p <arg>] -d <arg> [-help | -c | -s]
+    usage: Import [-h <arg>] [-u <arg>] [-p <arg>] -d <arg> [-r <arg>] [-help | -c | -s]
     -h,--host <arg>       Hostname or IP of the database server
     -u,--user <arg>       User name for the database server
     -p,--password <arg>   Password for the database server
     -d,--database <arg>   The database name
+    -r,--rect <arg>       Use this bounding box to limit queries. Provide four values separated by
+                          semicolons
     -help,--help          Print command line syntax
     -c,--create-table     Executes a CREATE TABLE statement instead of inserting data
     -s,--show-table       Prints out a CREATE TABLE statement instead of inserting data
