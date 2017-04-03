@@ -1,6 +1,5 @@
 package net.dystonse.tools;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import java.sql.Connection;
 import java.sql.Types;
 import java.util.Arrays;
@@ -20,36 +19,18 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.cli.*;
+
 public class Import 
 {
-    static Option optHost, optUser, optPassword, optHelp, optDatabase, optCreate, optShow, optRect;
+    static Option optHelp, optCreate, optShow, optRect;
     static  int minX, minY, maxX, maxY;    
 
-    static Connection conn;
     static CommandLine line;
     static JsonArray vehicles;
 
     static int count;
 
-    static void setupConnection() throws SQLException {
-        if(conn != null) {
-            return;
-        }
-
-        System.out.println("Verbinde mit der Datenbank...");
-
-        MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setUser(line.getOptionValue(optUser.getOpt()));
-        dataSource.setPassword(line.getOptionValue(optPassword.getOpt()));
-        dataSource.setServerName(line.getOptionValue(optHost.getOpt()));
-        conn = dataSource.getConnection();
-    }
-
     static Options createOptions(boolean requireCredentials, boolean requireRect) {
-        optHost     = Option.builder("h")   .longOpt("host").    required(requireCredentials).hasArg().desc("Hostname or IP of the database server").build();
-        optUser     = Option.builder("u")   .longOpt("user").    required(requireCredentials).hasArg().desc("User name for the database server").build();
-        optPassword = Option.builder("p")   .longOpt("password").required(requireCredentials).hasArg().desc("Password for the database server").build();
-        optDatabase = Option.builder("d")   .longOpt("database").required().                  hasArg().desc("The database name").build();
         optCreate   = Option.builder("c")   .longOpt("create-table").                                  desc("Executes a CREATE TABLE statement instead of inserting data").build();
         optShow     = Option.builder("s")   .longOpt("show-table").                                    desc("Prints out a CREATE TABLE statement instead of inserting data").build();
         optHelp     = Option.builder("help").longOpt("help").                                          desc("Print command line syntax").build();
@@ -61,10 +42,8 @@ public class Import
         group.addOption(optHelp);
         
         Options options = new Options();
-        options.addOption(optHost);
-        options.addOption(optUser);
-        options.addOption(optPassword);
-        options.addOption(optDatabase);
+        Database.addCommandLineOptions(options, requireCredentials);
+
         options.addOption(optRect);
         options.addOptionGroup(group);
 
@@ -156,16 +135,16 @@ public class Import
         parseCommandLine(args);
 
         if(line.hasOption(optShow.getOpt())) {
-            System.out.println(getCreateStatement());
+            System.out.println(Database.getCreateStatement(line.getOptionValue("database")));
             System.exit(0);
         }
 
         parseRect();
-        setupConnection();
+        Connection conn = Database.getConnection(line);
         String database = line.getOptionValue("database");
         if(line.hasOption(optCreate.getOpt())) {
             Statement smt = conn.createStatement();
-            smt.execute(getCreateStatement());
+            smt.execute(Database.getCreateStatement(database));
             conn.close();
             System.out.println("Table has been created.");
             System.exit(0);
@@ -202,25 +181,4 @@ public class Import
         System.out.println("Program ended successfully.");
     }
 
-    static String getCreateStatement() {
-        String database = line.getOptionValue("database");
-        String createStatement = "CREATE DATABASE IF NOT EXISTS `" + database + "` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;\n" +
-                "  USE `" + database + "`;\n" +
-                "\n" +
-                "  CREATE TABLE IF NOT EXISTS `realtime-input` (\n" +
-                "  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'internal ID for each data row',\n" +
-                "  `datasource` varchar(30) NOT NULL DEFAULT 'test',\n" +
-                "  `compound_id` varchar(30) NOT NULL COMMENT 'id with slashes as given by Hafas',\n" +
-                "  `productclass` int(11) NOT NULL COMMENT 'attribute ''c'' from Hafas',\n" +
-                "  `d` int(11) NOT NULL COMMENT 'attribute ''d'' from Hafas',\n" +
-                "  `name` varchar(30) NOT NULL,\n" +
-                "  `destination` varchar(50) NOT NULL,\n" +
-                "  `location` point NOT NULL,\n" +
-                "  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n" +
-                "  `delay` float DEFAULT NULL,\n" +
-                "  PRIMARY KEY (`id`),\n" +
-                "  KEY `timestamp` (`timestamp`)\n" +
-                ") ENGINE=InnoDB  DEFAULT CHARSET=latin1";
-        return createStatement;
-    }
 }
