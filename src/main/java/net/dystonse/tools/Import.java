@@ -2,15 +2,17 @@ package net.dystonse.tools;
 
 import java.sql.Connection;
 import java.sql.Types;
-import java.util.Arrays;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
+import java.util.Arrays;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.io.IOException;
+
+import java.net.URL;
 import java.net.HttpURLConnection;
 
 import com.google.gson.JsonParser;
@@ -93,7 +95,7 @@ public class Import
             HelpFormatter formatter = new HelpFormatter();
             formatter.setOptionComparator((Option a, Option b) -> 0);
             formatter.setWidth(100);
-            formatter.printHelp("java -cp <...> Import", options, true);
+            formatter.printHelp("Import", options, true);
             System.exit(-1);
         }
     }
@@ -154,8 +156,5 @@ public class Import
         System.out.println("All data prepared, executing batch.");
         statement.executeBatch();
         statement.close();
-
-
     }
-
 }

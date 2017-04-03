@@ -11,7 +11,7 @@ Compile using Maven by running:
     mvn package
 
 ## Import tool
-This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  [HAFAS API](https://github.com/derhuerst/vbb-hafas) to get the current position and delay of vehicles and writes them into a **MySQL** table. It is in very early development stage, but anyway it has already collected over four million records.
+This tool makes a request to the [VBB](http://www.vbb.de/de/article/fahrplan/online-fahrplanservices-auf-einen-blick/vbb-livekarte/20046.html) real time  HAFAS API (See explanations [here](https://github.com/derhuerst/vbb-hafas)) to get the current position and delay of vehicles and writes them into a **MySQL** table. It is in very early development stage, but anyway it has already collected over four million records.
 
     usage: Import [-h <arg>] [-u <arg>] [-p <arg>] -d <arg> [-r <arg>] [-help | -c | -s]
     -h,--host <arg>       Hostname or IP of the database server
@@ -28,6 +28,9 @@ You should use `-c` or `-s` on the first run to initialize the table schema.
 
 For each invocation without `-c` or `-s`, it performs a single request to the API and another one to the database. For continous data collection, you might set up a cronjob which runs every minute.
 
+## Geocode tool
+This tool is in very early developtment. See the code for details.
+
 ## Database setup
 In the near future, _dystonse-tools_ will support the database schemas defined by the popular python tools [gtfsdb](https://github.com/OpenTransitTools/gtfsdb) and [gtfsrdb](https://github.com/mattwigway/gtfsrdb), as well as the data they create. By then, _dystonse-tools_ should be able to create the needed tables automatically.
 
@@ -36,6 +39,6 @@ If you want to have those schemas now, you can either download, install and run 
 ## Future tools
 Over the course of 2017, the following tools/features are planned:
 
- * __GtfsRealtimeExport__ - Output a GTFS realtime feed
+ * __GtfsRealtimeExport__ - Output a GTFS realtime feed like [bullrunner-gtfs-realtime-generator](https://github.com/CUTR-at-USF/bullrunner-gtfs-realtime-generator) does
  * __Analyse__ - Perform several statistical analyses on the collected delay data, focused on delay prediction
  * __MapToShape__ - Map (lat,lon)-Locations to shapes from a GTFS feed

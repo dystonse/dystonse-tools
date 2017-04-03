@@ -30,6 +30,7 @@ buildNumber.properties
 
 # vs code specific:
 settings.json
+launch.json
 
 # eclipse specific:
 .metadata
