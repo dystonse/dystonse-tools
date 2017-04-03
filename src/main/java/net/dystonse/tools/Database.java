@@ -16,6 +16,8 @@ public class Database {
 
     static Option optHost, optUser, optPassword, optDatabase;
 
+    static String databaseName;
+
     static Connection getConnection(CommandLine line) throws SQLException {
         if(conn == null) {
             System.out.println("Verbinde mit der Datenbank...");
@@ -25,8 +27,14 @@ public class Database {
             dataSource.setPassword(line.getOptionValue(optPassword.getOpt()));
             dataSource.setServerName(line.getOptionValue(optHost.getOpt()));
             conn = dataSource.getConnection();
+
+            databaseName = line.getOptionValue("database");
         }
         return conn;
+    }
+
+    static String getDatabaseName() {
+        return databaseName;
     }
 
     static void addCommandLineOptions(Options options, boolean requireCredentials) {

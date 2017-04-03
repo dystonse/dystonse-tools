@@ -23,12 +23,32 @@ import org.apache.commons.cli.*;
 public class Import 
 {
     static Option optHelp, optCreate, optShow, optRect;
-    static  int minX, minY, maxX, maxY;    
-
     static CommandLine line;
-    static JsonArray vehicles;
+ 
+    public static void main(String[] args) throws SQLException, IOException {
+        parseCommandLine(args);
+        
+        if(line.hasOption(optShow.getOpt())) {
+            System.out.println(Database.getCreateStatement(Database.getDatabaseName()));
+            System.exit(0);
+        }
 
-    static int count;
+        Connection conn = Database.getConnection(line);
+        if(line.hasOption(optCreate.getOpt())) {
+            Statement smt = conn.createStatement();
+            smt.execute(Database.getCreateStatement(Database.getDatabaseName()));
+            conn.close();
+            System.out.println("Table has been created.");
+            System.exit(0);
+        }
+
+        BoundingBox bb = parseRect();
+        JsonArray vehicles = getVehicles(bb);
+        importVehicles(vehicles);
+        conn.close();
+        System.out.println("Program ended successfully.");
+    }
+
 
     static Options createOptions(boolean requireCredentials, boolean requireRect) {
         optCreate   = Option.builder("c")   .longOpt("create-table").                                  desc("Executes a CREATE TABLE statement instead of inserting data").build();
@@ -78,43 +98,19 @@ public class Import
         }
     }
 
-    static void optAssert(boolean assertion, String message) {
-        if(!assertion) {
-            throw new IllegalArgumentException(message);
+    static BoundingBox parseRect() throws IllegalArgumentException {
+        String rectString  = line.getOptionValue(optRect.getOpt());
+        try {
+            return new BoundingBox(rectString);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Parameter 'rect' must be present and have 4 numbers, separated by semicolons. " + e.getMessage());
         }
     }
 
-    static void parseRect() throws IllegalArgumentException {
-        final int MIN_LON = 6;
-        final int MAX_LON = 15;
-        final int MIN_LAT = 47;
-        final int MAX_LAT = 56;
-
-        String   rectString  = line.getOptionValue(optRect.getOpt());
-        optAssert(rectString != null, "Parameter 'rect' must be present and have 4 numbers, separated by semicolons.");
-        String[] rectStrings = rectString.split(";");
-        optAssert(rectStrings.length == 4, "Parameter 'rect' must be present and have 4 numbers, separated by semicolons.");
-        float[] rectValues = new float[4];
-        for(int i = 0; i < 4; i++) {
-            rectValues[i] = Float.parseFloat(rectStrings[i]);
-            if(rectValues[i] < MIN_LON * 1_000_000)
-                rectValues[i] *= 1_000_000;
-        }
-        
-        Arrays.sort(rectValues);
-        for(int i = 0; i < 2; i++)
-            optAssert(rectValues[i] >  MIN_LON * 1_000_000 && rectValues[i] <  MAX_LON * 1_000_000, "Lon values must be between " + MIN_LON + " and " + MAX_LON + " degrees. You can use floats or integers, in any order.");
-        for(int i = 2; i < 4; i++)
-            optAssert(rectValues[i] >  MIN_LAT * 1_000_000 && rectValues[i] <  MAX_LAT * 1_000_000, "Lat values must be between " + MIN_LAT + " and " + MAX_LAT + " degrees. You can use floats or integers, in any order.");
-        minX = (int)rectValues[0];
-        maxX = (int)rectValues[1];
-        minY = (int)rectValues[2];
-        maxY = (int)rectValues[3];
-    }
-    static void getVehicles() throws IOException {
+    static JsonArray getVehicles(BoundingBox boundingBox) throws IOException {
         System.out.println( "Fetching data from VBB..." );
 
-        String sURL = "http://fahrinfo.vbb.de/bin/query.exe/dny?look_minx="+minX+"&look_maxx="+maxX+"&look_miny="+minY+"&look_maxy="+maxY+"&tpl=trains2json2&look_productclass=127&look_json=yes&performLocating=1&look_nv=zugposmode|2|interval|0|intervalstep|1|";
+        String sURL = "http://fahrinfo.vbb.de/bin/query.exe/dny?" + boundingBox.getQueryString() + "&tpl=trains2json2&look_productclass=127&look_json=yes&performLocating=1&look_nv=zugposmode|2|interval|0|intervalstep|1|";
 
         // Connect to the URL using java's native library
         URL url = new URL(sURL);
@@ -125,37 +121,19 @@ public class Import
         JsonParser jp = new JsonParser(); //from gson
         JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent()));
         JsonObject rootobj = root.getAsJsonObject(); //May be an array, may be an object. 
-        vehicles = rootobj.get("t").getAsJsonArray();
-        count = rootobj.get("n").getAsInt();
+
+        int count = rootobj.get("n").getAsInt();
         System.out.println( "...retrieved " + count + " records." );
+        
+        return rootobj.get("t").getAsJsonArray();
     }
-
-    public static void main(String[] args) throws SQLException, IOException
-    {
-        parseCommandLine(args);
-
-        if(line.hasOption(optShow.getOpt())) {
-            System.out.println(Database.getCreateStatement(line.getOptionValue("database")));
-            System.exit(0);
-        }
-
-        parseRect();
+ 
+    static void importVehicles(JsonArray vehicles) throws SQLException {
         Connection conn = Database.getConnection(line);
-        String database = line.getOptionValue("database");
-        if(line.hasOption(optCreate.getOpt())) {
-            Statement smt = conn.createStatement();
-            smt.execute(Database.getCreateStatement(database));
-            conn.close();
-            System.out.println("Table has been created.");
-            System.exit(0);
-        }
-
-        getVehicles();
-
-        final PreparedStatement statement = conn.prepareStatement("INSERT INTO `" + database + "`.`realtime-input` (`id`, `datasource`, `compound_id`, `productclass`, `d`, `name`, `destination`, `location`, `timestamp`, `delay`) VALUES (NULL, 'VBB', ?, ?, ?, ?, ?, GeomFromText(?), CURRENT_TIMESTAMP, ?);");
-
-        for(int i = 0; i < count; i++) {
-            JsonObject vehicle = vehicles.get(i).getAsJsonObject();
+        final PreparedStatement statement = conn.prepareStatement("INSERT INTO `" + Database.getDatabaseName() + "`.`realtime-input` (`id`, `datasource`, `compound_id`, `productclass`, `d`, `name`, `destination`, `location`, `timestamp`, `delay`) VALUES (NULL, 'VBB', ?, ?, ?, ?, ?, GeomFromText(?), CURRENT_TIMESTAMP, ?);");
+        
+        for(JsonElement vehicleElement : vehicles) {
+            JsonObject vehicle = vehicleElement.getAsJsonObject();
 
             System.out.println("Wrting vehicle data for " + vehicle.get("n").getAsString().trim() + " to " + vehicle.get("l").getAsString());
 
@@ -177,8 +155,7 @@ public class Import
         statement.executeBatch();
         statement.close();
 
-        conn.close();
-        System.out.println("Program ended successfully.");
+
     }
 
 }
