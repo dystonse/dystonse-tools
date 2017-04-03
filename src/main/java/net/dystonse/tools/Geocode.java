@@ -5,6 +5,7 @@ import java.sql.Types;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.ResultSet;
 
 import java.util.Arrays;
 
@@ -17,11 +18,26 @@ import org.apache.commons.cli.*;
 
 public class Geocode 
 {
-    static Option optHelp, optCreate, optShow, optRect;
+    static Option optHelp;
     static CommandLine line;
  
     public static void main(String[] args) throws SQLException, IOException {
         parseCommandLine(args);
+        bla();
+    }
+
+    public static void bla() throws SQLException {
+        Connection conn = Database.getConnection(line);
+        String routeName = "U5";
+        System.out.println("Querying data for route " + routeName);
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT `destination` FROM `realtime-input` WHERE `name` = '"+routeName+"'");
+        System.out.println("Route " + routeName + " goes to...");
+        while(rs.next()) {
+            String destination = rs.getString("destination");
+            System.out.println("...to " + destination);
+        }
+        rs.close();
     }
 
     public static void parseCommandLine(String[] args) {
@@ -36,12 +52,12 @@ public class Geocode
                 formatter.printHelp("Geocode", options, true);
                 System.exit(0);
            }
-           if(!line.hasOption(optShow.getOpt())) {
-                // restart options parsing with a fresh options & parser instance
-                options = createOptions(true, true);
-                parser = new DefaultParser();
-                line = parser.parse(options, args);
-           }
+        //    if(!line.hasOption(optShow.getOpt())) {
+        //         // restart options parsing with a fresh options & parser instance
+        //         options = createOptions(true, true);
+        //         parser = new DefaultParser();
+        //         line = parser.parse(options, args);
+        //    }
         } catch(ParseException exp) {
             System.err.println("Parsing command line failed. Reason: " + exp.getMessage());
             HelpFormatter formatter = new HelpFormatter();

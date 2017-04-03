@@ -29,6 +29,8 @@ public class Database {
             conn = dataSource.getConnection();
 
             databaseName = line.getOptionValue("database");
+            Statement stmt = conn.createStatement();
+            stmt.execute("USE `" + databaseName + "`;");
         }
         return conn;
     }
