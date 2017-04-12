@@ -1,20 +1,13 @@
 package net.dystonse.tools;
 
 import java.sql.Connection;
-import java.sql.Types;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.ResultSet;
 
-import java.util.Arrays;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
 
 import org.apache.commons.cli.*;
-
 
 public class Geocode 
 {
@@ -30,15 +23,23 @@ public class Geocode
         Connection conn = Database.getConnection(line);
         String routeName = "U5";
         System.out.println("Querying data for route " + routeName);
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT `destination` FROM `realtime-input` WHERE `name` = '"+routeName+"'");
-        System.out.println("Route " + routeName + " goes to...");
-        while(rs.next()) {
-            String destination = rs.getString("destination");
-            System.out.println("...to " + destination);
+        Statement outerStmt = conn.createStatement();
+        Statement innerStmt = conn.createStatement();
+        ResultSet outerRs = outerStmt.executeQuery("SELECT DISTINCT `compound_id` FROM `realtime-input` WHERE `name` = '"+routeName+"' LIMIT 0,30");
+        while(outerRs.next()) {
+            String id = outerRs.getString("compound_id");
+            System.out.println("Fetching samples for train " + id + "...");
+        
+            ResultSet innerRs = innerStmt.executeQuery("SELECT `location` FROM `realtime-input` WHERE `compound_id`='" + id + "' ORDER BY `timestamp`;");
+            while(innerRs.next()) {
+                Point p = new Point((byte[])innerRs.getObject("location"));
+                System.out.println(p.latitude + ", " + p.longitude);
+            }
+            innerRs.close();
         }
-        rs.close();
+        outerRs.close();        
     }
+
 
     public static void parseCommandLine(String[] args) {
         Options options = createOptions(false, false);
