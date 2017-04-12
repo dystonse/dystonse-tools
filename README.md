@@ -29,7 +29,18 @@ You should use `-c` or `-s` on the first run to initialize the table schema.
 For each invocation without `-c` or `-s`, it performs a single request to the API and another one to the database. For continous data collection, you might set up a cronjob which runs every minute.
 
 ## Geocode tool
-This tool is in very early developtment. See the code for details.
+This tool is in very early developtment and does not do what it's supposed to do. It can currently be used to view small subset of the collected data on a map. See the code for details.
+
+    usage: Geocode [-help] -r <arg> [-h <arg>] [-u <arg>] [-p <arg>] -d <arg>
+    -help,--help          Print command line syntax
+    -r,--route <arg>      Name of the route which shall be shown.
+    -h,--host <arg>       Hostname or IP of the database server
+    -u,--user <arg>       User name for the database server
+    -p,--password <arg>   Password for the database server
+    -d,--database <arg>   The database name
+
+
+<img src="https://github.com/lenaschimmel/dystonse-tools/blob/master/doc/first-test.png?raw=true" alt="Screenshots of a very early version, showing the route S42."/>
 
 ## Database setup
 In the near future, _dystonse-tools_ will support the database schemas defined by the popular python tools [gtfsdb](https://github.com/OpenTransitTools/gtfsdb) and [gtfsrdb](https://github.com/mattwigway/gtfsrdb), as well as the data they create. By then, _dystonse-tools_ should be able to create the needed tables automatically.

@@ -11,12 +11,12 @@ import org.apache.commons.cli.*;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.swing.JFrame;
+import javax.swing.event.MouseInputListener;
 
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
@@ -28,18 +28,10 @@ import org.jxmapviewer.viewer.Waypoint;
 import org.jxmapviewer.viewer.WaypointPainter;
 import org.jxmapviewer.painter.CompoundPainter;
 import org.jxmapviewer.painter.Painter;
-import javax.swing.event.MouseInputListener;
-
-import org.jxmapviewer.JXMapViewer;
-import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.input.CenterMapListener;
 import org.jxmapviewer.input.PanKeyListener;
 import org.jxmapviewer.input.PanMouseInputListener;
 import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
-import org.jxmapviewer.viewer.DefaultTileFactory;
-import org.jxmapviewer.viewer.GeoPosition;
-import org.jxmapviewer.viewer.LocalResponseCache;
-import org.jxmapviewer.viewer.TileFactoryInfo;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -50,7 +42,7 @@ import java.awt.geom.Point2D;
 
 public class Geocode 
 {
-    static Option optHelp;
+    static Option optHelp, optRoute;
     static CommandLine line;
  
     public static void main(String[] args) throws SQLException, IOException {
@@ -60,7 +52,7 @@ public class Geocode
 
     public static void bla() throws SQLException {
         Connection conn = Database.getConnection(line);
-        String routeName = "S41";
+        String routeName = line.getOptionValue(optRoute.getOpt());
         System.out.println("Querying data for route " + routeName);
         Statement outerStmt = conn.createStatement();
         Statement innerStmt = conn.createStatement();
@@ -172,7 +164,9 @@ public class Geocode
         Options options = new Options();
 
         optHelp = Option.builder("help").longOpt("help").desc("Print command line syntax").build();
+        optRoute = Option.builder("r").longOpt("route").hasArg().required().desc("Name of the route which shall be shown.").build();
         options.addOption(optHelp);
+        options.addOption(optRoute);
         Database.addCommandLineOptions(options, requireCredentials);        
 
         return options;
@@ -182,7 +176,6 @@ public class Geocode
 
 class RoutePainter implements Painter<JXMapViewer>
 {
-	private Color color = Color.RED;
 	private boolean antiAlias = true;
 	
 	private List<List<GeoPosition>> tracks;
