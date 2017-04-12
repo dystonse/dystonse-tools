@@ -21,7 +21,7 @@ public class Point {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         byte byteOrderByte = buffer.get(0);
         buffer.order(byteOrderByte == 1 ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
-        this.longitude = buffer.getDouble(9);
-        this.latitude = buffer.getDouble(17);
+        this.latitude = buffer.getDouble(9);
+        this.longitude = buffer.getDouble(17);
     }
 }
