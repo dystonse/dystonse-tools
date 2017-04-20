@@ -42,6 +42,36 @@ This tool is in very early developtment and does not do what it's supposed to do
 
 <img src="https://github.com/lenaschimmel/dystonse-tools/blob/master/doc/first-test.png?raw=true" alt="Screenshots of a very early version, showing the route S42."/>
 
+Later on, it will
+
+* Fetch the locations of some vehicles (filter criteria tbd.)
+* Fetch the corresponding route shapes (note that each route might have several alternative shapes)
+* (maybe) fetch the schedule data for the vehicle
+* match each vehicle position to a specific route shape
+* find the position of the vehicle along the route to compute _streckenkilometer_
+* (maybe) perform a fresh estimation of where it should have been at that time / when it should have been at that place
+
+## Prediction tool
+This tool will use statistic algorithms to form a model that can predict the future delay of vehicles based on the current delay and other relevant predictive variables.
+
+Possible variables (in order of descending obviousness):
+
+* Current delay
+* Route (discreet value)
+* Directions (discreet value)
+* Position on route
+* Time of day
+* Day of  (discreet value)
+* Type of day, like e.g. weekday, weekend (derived, discreet value)
+* Typ of vehicle (discreet value)
+* Age of measurement (to account for temporarily repeating patterns of delay, e.g. due to construction)
+* Current delay of previous vehicle
+* Headway between current and previous vehicle (derived)
+
+A first query on that model that's actually useful to plan a trip from X to Y would look like this: _For **this vehicle**, which is **now** at place **A** and should already be at place **B**, what's the probability distribution of times when it will depart at place **X**?_
+
+For each of several possible departure times at place C, we can then ask:  _For **this vehicle**, given that it will depart at place **C** at time **t** and should by then be at place **D**, what's the probability distribution of times when it will arrive at place **Y**?_ Which is the same kind of query with different input values. In this scenario, the higher variance of predictions in the later future is already handled by the explicit enumeration of possible _departure times at place **C**_.
+
 ## Database setup
 In the near future, _dystonse-tools_ will support the database schemas defined by the popular python tools [gtfsdb](https://github.com/OpenTransitTools/gtfsdb) and [gtfsrdb](https://github.com/mattwigway/gtfsrdb), as well as the data they create. By then, _dystonse-tools_ should be able to create the needed tables automatically.
 
@@ -53,3 +83,6 @@ Over the course of 2017, the following tools/features are planned:
  * __GtfsRealtimeExport__ - Output a GTFS realtime feed like [bullrunner-gtfs-realtime-generator](https://github.com/CUTR-at-USF/bullrunner-gtfs-realtime-generator) does
  * __Analyse__ - Perform several statistical analyses on the collected delay data, focused on delay prediction
  * __MapToShape__ - Map (lat,lon)-Locations to shapes from a GTFS feed
+
+## News and Contact
+You can follow [@Dysonse](https://twitter.com/dystonse) on Twitter to stay up to date or get in touch.
