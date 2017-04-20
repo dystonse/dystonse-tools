@@ -1,6 +1,10 @@
 # dystonse-tools
 Java-powered tools supporting the [dystonse](https://github.com/lenaschimmel/dystonse)-algorithm. The aim is bridging the gap between Berlins real time data (in the proprietary HAFAS format) and other available date, which is published as GTFS realtime feed, so that software can be built that works on either kind of data stream.
 
+<p align="center">
+  <img src="https://github.com/lenaschimmel/dystonse/blob/master/header_white.png?raw=true" alt="Header image with dystonse logo"/>
+</p>
+
 Currently there is only a very simple data logger to get delay information from VBB and write it to a database.
 
 More tools, structure and documentation will follow, see below.
