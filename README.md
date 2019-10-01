@@ -1,4 +1,12 @@
 # dystonse-tools
+
+**This repository is a part of the multi-repository project `dystonse`. See the [main repository](https://github.com/lenaschimmel/dystonse) for more information.**
+
+‼️ _**These tools are no longer maintained and will be replaced with newer implementations, using other technologies. The information below is not updated to reflect these plans.**_ ‼️
+
+
+## Description
+
 Java-powered tools supporting the [dystonse](https://github.com/lenaschimmel/dystonse)-algorithm. The aim is bridging the gap between Berlins real time data (in the proprietary HAFAS format) and other available date, which is published as GTFS realtime feed, so that software can be built that works on either kind of data stream.
 
 <p align="center">
