@@ -26,3 +26,7 @@ node compare_vdv_agencies.js PATH_TO_AGENCY_LIST
 Where `PATH_TO_AGENCY_LIST` points to an `agency.txt` file. In a first step, it will try to find identical names and names with high similarity. After that, it will query you for a guided search of matches with low similarity.
 
 All matches will be appended to `output/matches.csv`. The first column contains a similarity measure for automatic matches (between `70%` and `100%`), or `manual` for guided matches. If you re-run the tool, old matches will be kept and only unmatched items will be re-queried.
+
+## More potential data sources
+ * List of acronyms: http://www.bahnseite.de/purespace/verbuende.html
+ * Map of German transit associations: https://github.com/highsource/verbundkarte
