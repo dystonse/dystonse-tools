@@ -4,6 +4,7 @@ This is a collections of tools for gathering and organizing information about Ge
 ## Requirements
  * You need to have the tool `pdf2txt`, which you can install by running `pip install pdfminer` on any python-enabled system. On some linux distributions you might be able to get it from your system's package manager, e.g. `apt-get`.
  * NodeJS
+ * curl
 
 ## Extraction
 This downloads the current list of member companies from the [VDV website](https://www.vdv.de/) and reformats it as csv table. The VDV is a large association of transit companies, which maintains a high quality list of member organizations.
